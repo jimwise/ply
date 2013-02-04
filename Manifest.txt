@@ -2,6 +2,7 @@
 History.txt
 Manifest.txt
 README.txt
+README.rdoc
 Rakefile
 bin/ply2ascii
 examples/cube_ascii.ply
