@@ -1,12 +1,6 @@
 require "test/unit"
 require "ply"
 
-Cube_files = %w{
-  cube_ascii.ply
-  cube_binary_big_endian.ply
-  cube_binary_little_endian.ply
-}
-
 class TestPly < Test::Unit::TestCase
   def test_ascii
     verify_cube_file "examples/cube_ascii.ply"
