@@ -10,3 +10,4 @@ examples/cube_binary_little_endian.ply
 examples/examples.rb
 lib/ply.rb
 test/test_ply.rb
+test/test_ply2ascii.rb
