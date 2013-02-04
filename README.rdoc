@@ -1,6 +1,10 @@
 = ply
 
-* FIX (url)
+https://github.com/jimwise/ply
+
+Author::    Jim Wise  (mailto:jwise@draga.com)
+Copyright:: Copyright (c) 2013 Jim Wise
+License::   2-clause BSD-Style (see LICENSE.txt)
 
 == DESCRIPTION:
 
