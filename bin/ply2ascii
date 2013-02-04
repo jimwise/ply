@@ -2,6 +2,15 @@
 
 require 'ply'
 
+USAGE = "usage: #{$0} <ply file> ..."
+HELP = <<EOL
+This utility translates ply files with vertex and triangle information
+into simple ASCII files.
+
+Each plyfile specified on the command line is read, and corresponding
+triangle and vertex files are created in the current directory.
+EOL
+
 class Ply2Ascii < Ply::PlyFile
   def initialize infile, outname
     @verts = File.new("vertices_#{outname}.ascii", "w")
@@ -21,6 +30,11 @@ class Ply2Ascii < Ply::PlyFile
       puts "skipping unknown element type #{elt[:name]}"
     end
   end
+end
+
+if ARGV.size == 0
+  puts USAGE
+  puts HELP
 end
 
 ARGV.each do |fname|
