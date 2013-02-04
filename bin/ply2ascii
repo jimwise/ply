@@ -1,0 +1,35 @@
+#!/usr/bin/env ruby
+
+require 'ply'
+
+class Ply2Ascii < Ply::PlyFile
+  def initialize infile, outname
+    @verts = File.new("vertices_#{outname}.ascii", "w")
+    @verts.puts("# written by ply.rb")
+    @tris = File.new("triangles_#{outname}.ascii", "w")
+    @tris.puts("# written by ply.rb")
+    super infile
+  end
+
+  def element_callback elt, val
+    case elt[:name]
+    when "vertex"
+      @verts.puts "#{val["x"]} #{val["y"]} #{val["z"]}"
+    when "face"
+      @tris.puts val["vertex_indices"].join " "
+    else
+      puts "skipping unknown element type #{elt[:name]}"
+    end
+  end
+end
+
+ARGV.each do |fname|
+  begin
+    outname = File.basename(fname, ".ply")
+    Ply2Ascii.new(fname, outname)
+  rescue Ply::BadFile => bf
+    puts "#{fname}: #{bf}"
+  end
+end
+
+# -*- ruby -*-

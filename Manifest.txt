@@ -1,0 +1,12 @@
+.autotest
+History.txt
+Manifest.txt
+README.txt
+Rakefile
+bin/ply2ascii
+examples/cube_ascii.ply
+examples/cube_binary_big_endian.ply
+examples/cube_binary_little_endian.ply
+examples/examples.rb
+lib/ply.rb
+test/test_ply.rb
