@@ -177,6 +177,17 @@ subdirectory of this gem includes a simple triangulated cube model in all
 three PLY file formats, as well as a script to generate these three files
 which you may modify for your own purposes.
 
+=== ply2ascii
+
+Finally, this gem includes a simple script, +ply2ascii+, which can be used
+to parse any of the three PLY file formats containing a triangulated scene
+with vertices in an element named +vertex+ with (at least) scalar properties
++x+, +y+, and +z+, and faces in an elemnt named +face+ containing a list
+property +vertex_indices+, and produce a simple ASCII dump of the described
+scene in two files.
+
+Run +ply2ascii+ with no arguments for (a little) more information.
+
 == DEVELOPERS:
 
 After checking out the source, run:
