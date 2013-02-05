@@ -34,8 +34,8 @@ class TestPly < Test::Unit::TestCase
     assert p.data["face"][11]["vertex_indices"][2] == 3
   end
 
-  class PlyCBTest < Ply::PlyFile
-    attr_accessor :counts
+  class PlyFileCounter < Ply::PlyFile
+    attr_reader :counts
 
     def initialize f
       @counts = {}
@@ -49,7 +49,7 @@ class TestPly < Test::Unit::TestCase
   end
 
   def verify_cube_callback c
-    p = PlyCBTest.new c
+    p = PlyFileCounter.new c
     assert p.counts["vertex"] == 8
     assert p.counts["face"] == 12
   end

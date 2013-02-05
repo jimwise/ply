@@ -8,23 +8,174 @@ License::   2-clause BSD-Style (see LICENSE.txt)
 
 == DESCRIPTION:
 
-FIX (describe your package)
+Ply is a ruby gem for reading Stanford PLY-format 3D model files.
 
-== FEATURES/PROBLEMS:
+The PLY file format is a flexible format for storing semi-structured binary data,
+and is often used to stored polygonalized 3D models generated with range
+scanning hardware.  You can find some examples of the format at the the
+{Stanford 3D Scanning Repository}[http://graphics.stanford.edu/data/3Dscanrep/].
+ 
+Ply provides a simple API for quick access to the data in a PLY file
+(including examining the structure of a particular file's content), and
+an almost-as-simple event-driven API which can be used to process extremely
+large ply files in a streaming fashion, without needing to keep the full
+dataset represented in the file in memory.  Ply handles all three types of
+PLY files (ascii, binary-big-endian and binary-little-endian).
 
-* FIX (list of features or problems)
+If you don't have any Stanford PLY files on hand, you probably don't need
+this gem, but if you're curious, the PLY file format, described at
+Wikipedia[http://en.wikipedia.org/wiki/PLY_(file_format)]
 
-== SYNOPSIS:
-
-  FIX (code sample of usage)
 
 == REQUIREMENTS:
 
-* FIX (list of requirements)
+Ply currently requires Ruby 1.9.3 -- if you have a need to run Ply with Ruby
+1.8.7, drop me an email[mailto:jwise@draga.com], and I'll look into
+backporting it.  Ply has no other dependencies.
 
 == INSTALL:
 
-* FIX (sudo gem install, anything else)
+   $ gem install ply
+
+== SYNOPSIS: 
+ 
+=== How to Use This Gem
+
+To get started, include this gem using
+
+    require 'ply'
+
+This gem provides the Ply module.  This module provides a single class,
+Ply::PlyFile, which can be used directly to parse a PLY file into memory, or
+subclassed to take advantage of Ply's event-driven API for handling large
+PLY files.
+
+=== The Simple API
+
+To parse a PLY file into memory, simply instantiate the Ply::PlyFile class,
+passing either the name of the PLY file or an IO object open on a PLY file 
+to Ply::PlyFile.new.  Thus this:
+
+    pf = Ply::PlyFile.new "horse.ply"
+
+and this:
+
+    pf = Ply::PlyFile.new File.new("horse.ply")
+
+do the same thing.
+
+The PLY file is parsed at construction time, and provides the following
+read-only accessors:
+
+Ply::PlyFile#version::
+  The version of the PLY format used in this file, as a String -- at this
+  time the only defined PLY version is 1.0.
+
+Ply::PlyFile#format::
+  The format of this PLY file as a String-- one of +ascii+,
+  +binary_big_endian+, or +binary_little_endian+.
+
+Ply::PlyFile#elements::
+  The structure of the data in this PLY file, as an array of Hashes, in the
+  order the elements will appear in the file.  Each Hash contains the
+  following keys:
+
+  :name::  the name of this element type
+
+  :count:: the number of elements of this type in this PLY file
+
+  :properties::
+    an array of Hashes describing the properties of this element
+    type.  Each Hash in the +:properties+ array contains the following keys:
+
+    :name::   the name of this property of the current element
+
+    :type::
+      the type of this property (an integral or floating point type, as
+      defined in the PLY file format, or +list+.  If the current property is
+      of type +list+ (a PLY array type), its property Hash also contains the
+      following keys:
+
+     :index_type::
+        the type of the index of this list
+
+     :element_type::
+        the type of the elements in this list
+
+If you are using the Ply::PlyFile class directly (as opposed to subclassing
+it in order to use Ply's event-driven API for handling large PLY files), an
+additional read-only accessor is available
+  
+Ply::PlyFile#data::
+
+  The actual data in this file, in the structure defined by the return value
+  of Ply::PlyFile#elements, as a Hash of Arrays of Hashes.  This data is returned
+  as a Hash keyed by the name of each element type in the file (as a
+  String), and containing an array of Hashes for each element type in the
+  file, keyed by the property names of that element, as Strings.
+
+  That's not as complicated as it sounds!  If the file +horse.ply+ defines a
+  +vertex+ element, with properties +x+, +y+, and +z+, then
+
+      pf = Ply::PlyFile.new "horse.ply"
+      verts = pf.data["vertex"]
+
+  will return an array of all vertices in the file, and
+
+      verts[0]["x"]
+
+  will give you the value of the +x+ property of the first +vertex+ element
+  in the file, as an Integer, Float, or Array, depending on the declared
+  type of that property in the PLY file.
+
+=== The Event-Driven API
+
+The above API is easy to use, but has the disadvantage that the entire data
+stored in the PLY file must be able to fit in memory, in order to be
+returned by Ply::PlyFile::data.  For this reason, a simple event-driven API
+for handling PLY data is also provided.  To make use of this, simply
+subclass the class Ply::PlyFile, and provide your own version of the method
+Ply::PlyFile#element_callback.  When a new object of your subclass is
+constructed from a PLY file, your implementation of this method will be
+called once for each element in the file, and passed two arguments:
+
+* The type of the current element, in the same format as a member of the
+  array returned by Ply::PlyFile::elements
+
+* The current element, in the same format as the members of the arrays
+  returned by Ply::PlyFile::data
+
+Note that if your subclass provides a #initialize method, it is your
+responsibility to ensure that PlyFile
+
+As an example, the following code defines a subclass of PlyFile which merely
+*counts* the elements of each type present in PLY file, without reading them
+all into memory at the same time:
+
+    class PlyFileCounter < Ply::PlyFile
+      attr_reader :counts
+
+      def initialize f
+        @counts = {}
+        super f
+      end
+
+      def element_callback e, v
+        @counts[e[:name]] ||= 0
+        @counts[e[:name]] = @counts[e[:name]] + 1
+      end
+    end
+
+    p = PlyFileCounter.new "horse.ply"
+    puts "There are #{p.counts["vertex"]} vertices in the file."
+
+=== Example Files
+
+In addition to the large models in the {Stanford 3D Scanning
+Repository}[http://graphics.stanford.edu/data/3Dscanrep/], the +examples/+
+subdirectory of this gem includes a simple triangulated cube model in all
+three PLY file formats, as well as a script to generate these three files
+which you may modify for your own purposes.
 
 == DEVELOPERS:
 
@@ -37,25 +188,29 @@ and generate the RDoc.
 
 == LICENSE:
 
-(The MIT License)
+(The BSD 2-clause License)
 
-Copyright (c) 2013 FIX
+ Copyright (c) 2013 Jim Wise
+ All rights reserved.
 
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-'Software'), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions
+ are met:
 
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
+ 1. Redistributions of source code must retain the above copyright
+    notice, this list of conditions and the following disclaimer.
+ 2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
 
-THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+ TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+ PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ POSSIBILITY OF SUCH DAMAGE.
