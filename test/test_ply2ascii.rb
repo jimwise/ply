@@ -18,6 +18,6 @@ class TestPly2Ascii < Test::Unit::TestCase
 
   def test_help
     out = `env RUBYOPT=-I./lib bin/ply2ascii`
-    assert out.match /^This utility/
+    assert out.match(/^This utility/)
   end
 end
