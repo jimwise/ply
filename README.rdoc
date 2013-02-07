@@ -10,9 +10,9 @@ License::   2-clause BSD-Style (see LICENSE.txt)
 
 Ply is a ruby gem for reading Stanford PLY-format 3D model files.
 
-The PLY file format is a flexible format for storing semi-structured binary data,
-and is often used to stored polygonalized 3D models generated with range
-scanning hardware.  You can find some examples of the format at the the
+The PLY file format is a flexible format for storing semi-structured binary
+data, and is often used to stored polygonalized 3D models generated with
+range scanning hardware.  You can find some examples of the format at the
 {Stanford 3D Scanning Repository}[http://graphics.stanford.edu/data/3Dscanrep/].
  
 Ply provides a simple API for quick access to the data in a PLY file
@@ -23,9 +23,8 @@ dataset represented in the file in memory.  Ply handles all three types of
 PLY files (ascii, binary-big-endian and binary-little-endian).
 
 If you don't have any Stanford PLY files on hand, you probably don't need
-this gem, but if you're curious, the PLY file format, described at
-Wikipedia[http://en.wikipedia.org/wiki/PLY_(file_format)]
-
+this gem, but if you're curious, the PLY file format is described at
+Wikipedia[http://en.wikipedia.org/wiki/PLY_(file_format)].
 
 == REQUIREMENTS:
 
@@ -142,15 +141,19 @@ called once for each element in the file, and passed two arguments:
 * The type of the current element, in the same format as a member of the
   array returned by Ply::PlyFile::elements
 
-* The current element, in the same format as the members of the arrays
-  returned by Ply::PlyFile::data
+* The current element, in the same format as a member of the arrays returned
+  by Ply::PlyFile::data
 
 Note that if your subclass provides a #initialize method, it is your
-responsibility to ensure that PlyFile
+responsibility to ensure that the initialize method of Ply::PlyFile is also
+called with an appropriate argument -- see below for an example of how to do
+this using ruby's +super+ keyword.
 
 As an example, the following code defines a subclass of PlyFile which merely
 *counts* the elements of each type present in PLY file, without reading them
 all into memory at the same time:
+
+    require 'ply'
 
     class PlyFileCounter < Ply::PlyFile
       attr_reader :counts
@@ -174,8 +177,8 @@ all into memory at the same time:
 In addition to the large models in the {Stanford 3D Scanning
 Repository}[http://graphics.stanford.edu/data/3Dscanrep/], the +examples/+
 subdirectory of this gem includes a simple triangulated cube model in all
-three PLY file formats, as well as a script to generate these three files
-which you may modify for your own purposes.
+three PLY file formats, as well as a script to generate these three files,
+which also provides an example of how to write Ply files using ruby.
 
 === ply2ascii
 
